@@ -1,0 +1,17 @@
+<html>
+    <head>
+        <title>{{ title }}</title>
+    </head>
+    <body>
+        <div>
+            {% if current_user.is_anonymous %}
+            <a href="{{ url_for('.login') }}">Log In</a>
+            <a href="{{ url_for('.register') }}">Register</a>
+            <a href="{{ url_for('.request_password_reset') }}">Forgot your password?</a>
+            {% else %}
+            <a href="{{ url_for('.logout') }}">Logout</a>
+            {% endif %}
+        </div>
+        {% block body %}{% endblock %}
+    </body>
+</html>

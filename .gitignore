@@ -1,0 +1,7 @@
+*.pyc
+.idea
+.mypy_cache
+.vscode
+*egg-info*
+build
+dist

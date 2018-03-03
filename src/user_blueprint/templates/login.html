@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block body %}
+    <h1>Sign In</h1>
+
+    <form action="{{ url_for('.login') }}" method="post">
+        {{ form.hidden_tag() }}
+
+        <span>Username or email address:</span>
+        <input type="text" name="username" value="{{ form.username.data if form.username.data else '' }}" required pattern=".{5,40}"/>
+        <br />
+
+        <span>Password:</span>
+        <input type="password" name="password" required pattern=".{8,40}"/>
+        <br />
+
+        <span>Remember Me</span>
+        <input type="checkbox" value="{{ form.remember.data }}" name="remember" />
+        <br />
+
+        {% if login_error %}
+        <span style="color: red;">{{ login_error }}</span>
+        <br />
+        {% endif %}
+
+        <input type="submit" value="Sign In" />
+    </form>
+{% endblock %}
