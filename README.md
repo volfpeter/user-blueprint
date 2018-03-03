@@ -22,3 +22,7 @@ The library requires the following dependencies to be installed.
 ## License - MIT
 
 The library is open-sourced under the conditions of the MIT [license](https://choosealicense.com/licenses/mit/).
+
+## Credit
+
+Miguel Grinberg's [Flask Mega-Tutorial](https://blog.miguelgrinberg.com/post/the-flask-mega-tutorial-part-i-hello-world)
