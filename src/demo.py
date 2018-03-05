@@ -11,7 +11,7 @@ from flask import Flask, url_for
 
 from flask_login import LoginManager, UserMixin, current_user, login_required
 
-from user_blueprint import blueprint as user
+from user_blueprint.blueprint import user_blueprint, user_handler
 from user_blueprint.user import RegistrationData
 
 
@@ -98,9 +98,7 @@ users: Dict[str, User] = {}
 
 app = Flask(__name__)
 app.secret_key = "some secret key, should be configured correctly from a config object"
-app.register_blueprint(user.user_blueprint, url_prefix="/user")
-
-user.reset_token_secret = "DemoResetTokenSecret"
+app.register_blueprint(user_blueprint, url_prefix="/user")
 
 login_manager: LoginManager = LoginManager(app)
 """
@@ -133,7 +131,11 @@ def get_user_by_id(user_id: str) -> Optional[User]:
 # ------------------------------------------------------------
 
 
-@user.user_handler.user_getter
+user_handler.reset_token_secret = "DemoResetTokenSecret"
+
+
+@user_handler.user_by_reset_key_getter
+@user_handler.user_getter
 def get_user_by_identifier(identifier: str) -> Optional[User]:
     """
     Returns the user corresponding to the given identifier.
@@ -154,7 +156,7 @@ def get_user_by_identifier(identifier: str) -> Optional[User]:
     return None
 
 
-@user.user_handler.identifier_getter
+@user_handler.reset_key_getter
 def get_user_identifier(user: User) -> str:
     """
     Returns the identifier of the given user.
@@ -168,7 +170,7 @@ def get_user_identifier(user: User) -> str:
     return user.email
 
 
-@user.user_handler.password_getter
+@user_handler.password_getter
 def get_user_password(user: User) -> str:
     """
     Returns the password of the given user.
@@ -182,7 +184,7 @@ def get_user_password(user: User) -> str:
     return user.password
 
 
-@user.user_handler.user_inserter
+@user_handler.user_inserter
 def insert_user(data: RegistrationData) -> bool:
     """
     Inserts the user specified by the given registration form data to the database.
@@ -211,7 +213,7 @@ def insert_user(data: RegistrationData) -> bool:
 
     return True
 
-@user.user_handler.password_reset_email_sender
+@user_handler.password_reset_email_sender
 def send_password_reset_email(user: User, reset_link: str) -> bool:
     """
     Sends the password reset email with the given reset link to the user.
@@ -231,7 +233,7 @@ def send_password_reset_email(user: User, reset_link: str) -> bool:
     return True
 
 
-@user.user_handler.password_updater
+@user_handler.password_updater
 def update_user_password(user: User, password_hash: str) -> bool:
     """
     Updates the password of the given user to the specified value.

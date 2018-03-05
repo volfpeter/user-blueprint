@@ -6,20 +6,15 @@ Flask user handler blueprint.
 # ----------------------------------------
 
 
-from flask import abort,\
-                  Blueprint,\
+from flask import Blueprint,\
                   redirect,\
                   render_template,\
                   request,\
                   url_for
 
 from flask_login import current_user,\
-                        LoginManager,\
                         login_required,\
-                        login_user,\
                         logout_user
-
-from passlib.hash import argon2
 
 from werkzeug.urls import url_parse
 
@@ -32,9 +27,6 @@ from user_blueprint.user import UserHandler,\
 
 # Typing imports
 # ----------------------------------------
-
-
-from typing import Dict, Mapping
 
 
 # Metadata
@@ -64,12 +56,6 @@ The user handler the blueprint is using to interact with the user database.
 """
 
 
-reset_token_secret: str = None
-"""
-The secret key to use to sign password reset tokens.
-"""
-
-
 # Blueprint routes
 # ----------------------------------------
 
@@ -85,19 +71,13 @@ def login():
     login_error = ""
     form = LoginForm()
     if form.validate_on_submit():
-        data: LoginData = LoginData.from_form(form)
-        user = user_handler.get_user(data.username)
-        try:
-            if user is not None and argon2.verify(data.password, user_handler.get_password_hash(user)):
-                login_user(user, remember=data.remember)
-                next_page = request.args.get("next")
-                if not is_internal_url(next_page):
-                    next_page = url_for("index")
-                return redirect(next_page)
-            else:
-                login_error = "Invalid username or password."
-        except Exception:
-            pass
+        if user_handler.login_user(LoginData.from_form(form)):
+            next_page = request.args.get("next")
+            if not is_internal_url(next_page):
+                next_page = url_for("index")
+            return redirect(next_page)
+        else:
+            login_error = "Invalid username or password."
 
     return render_template("login.html", form=form, title="Log In", login_error=login_error)
 
@@ -122,8 +102,7 @@ def register():
 
     form = RegistrationForm(user_handler)
     if form.validate_on_submit():
-        data: RegistrationData = RegistrationData.from_form(form)
-        if user_handler.insert_user(data):
+        if user_handler.insert_user(RegistrationData.from_form(form)):
             return redirect(url_for(".login"))
 
     return render_template("register.html", form=form, title="Register")
@@ -139,18 +118,7 @@ def request_password_reset():
 
     form = RequestPasswordResetForm()
     if form.validate_on_submit():
-        user = user_handler.get_user(form.email.data)
-        if user is not None:
-            from time import time
-            import jwt
-
-            token: str = jwt.encode(
-                {"reset_key": user_handler.get_identifier(user), "exp": time() + 600},
-                reset_token_secret
-            )
-
-            user_handler.send_password_reset_email(user, url_for(".reset", token=token, _external=True))
-
+        user_handler.send_password_reset_email(form.email.data)
         return render_template(
             "request_password_reset.html",
             title="Reset Password",
@@ -169,27 +137,18 @@ def request_password_reset():
 @user_blueprint.route("/reset/<token>", methods=['GET', 'POST'])
 def reset(token: str):
     """
-    View function for the page where the user can her or his password.
+    View function for the page where the user can reset her or his password.
     """
     if current_user.is_authenticated:
         return redirect(url_for("index"))
 
-    import jwt
-
-    try:
-        data: Mapping = jwt.decode(token, reset_token_secret)
-    except:
-        return redirect(url_for(".login"))
-
-    if not user_handler.validate_reset_token(data):
-        return redirect(url_for(".login"))
-
-    user = user_handler.get_user(data["reset_key"])
+    user = user_handler.get_user_for_reset_token(token)
     if user is None:
         return redirect(url_for(".login"))
 
     form = PasswordResetForm()
     if form.validate_on_submit():
+        from passlib.hash import argon2
         user_handler.update_password(user, argon2.hash(form.password.data))
         return redirect(url_for(".login"))
 
