@@ -123,7 +123,6 @@ def get_user_by_id(user_id: str) -> Optional[User]:
     Returns:
         The user that has the given ID or `None` if no such user exists.
     """
-    global users
     return users.get(user_id)
 
 
@@ -146,7 +145,6 @@ def get_user_by_identifier(identifier: str) -> Optional[User]:
     Returns:
         The user corresponding to the given identifier if such a user exists.
     """
-    global users
     for user in users.values():
         # Allow login both with username and email address.
         if user.username == identifier:
@@ -208,7 +206,6 @@ def insert_user(data: RegistrationData) -> bool:
     user.last_name = data.last_name
     user.password = data.password
 
-    global users
     users[user.id] = user
 
     return True
