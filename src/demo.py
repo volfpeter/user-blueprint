@@ -98,14 +98,14 @@ users: Dict[str, User] = {}
 
 app = Flask(__name__)
 app.secret_key = "some secret key, should be configured correctly from a config object"
-app.register_blueprint(user_blueprint, url_prefix="/user")
+app.register_blueprint(user_blueprint, url_prefix="/auth")
 
 login_manager: LoginManager = LoginManager(app)
 """
 The login manager to use in the application.
 """
 
-login_manager.login_view = "user.login"
+login_manager.login_view = "auth.login"
 
 
 # Login manager configuration
@@ -263,7 +263,7 @@ def index():
     user: User = current_user
     return \
         "<div>" +\
-        f"<a href=\"{url_for('user.logout')}\">Log out</a>" +\
+        f"<a href=\"{url_for('auth.logout')}\">Log out</a>" +\
         f"<h1>Welcome {str(user)}</h1>" +\
         "</div>"
 

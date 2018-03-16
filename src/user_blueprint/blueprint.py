@@ -40,7 +40,7 @@ __author__ = "Peter Volf"
 # ----------------------------------------
 
 
-user_blueprint: Blueprint = Blueprint("user", __name__, template_folder="templates")
+user_blueprint: Blueprint = Blueprint("auth", __name__, template_folder="templates")
 """
 The "user" blueprint.
 """
