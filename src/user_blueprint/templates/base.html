@@ -1,17 +1,25 @@
 <html>
     <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width">
+
         <title>{{ title }}</title>
+
+        <link href="https://unpkg.com/normalize.css@^7.0.0" rel="stylesheet" />
+        <link href="https://unpkg.com/@blueprintjs/core@^2.0.0-rc/lib/css/blueprint.css" rel="stylesheet" />
     </head>
-    <body>
-        <div>
-            {% if current_user.is_anonymous %}
-            <a href="{{ url_for('.login') }}">Log In</a>
-            <a href="{{ url_for('.register') }}">Register</a>
-            <a href="{{ url_for('.request_password_reset') }}">Forgot your password?</a>
-            {% else %}
-            <a href="{{ url_for('.logout') }}">Logout</a>
-            {% endif %}
+    <body style="display: flex; height: 100vh; width: 100vw;">
+        <div style="display:flex; flex-direction:column; min-height:100vh; min-width:100vw; align-items:center; justify-content: center;">
+            <div class="pt-card pt-elevation-4" style="display:flex; flex-direction:column; min-width:300px; max-width:100vw;">
+                {% block body %}{% endblock %}
+                {% if current_user.is_anonymous %}
+                <nav style="display:flex; flex-direction:row;">
+                    <a class="pt-menu-item" href="{{ url_for('.login') }}"><span>Log In</span></a>
+                    <a class="pt-menu-item" href="{{ url_for('.register') }}"><span>Register</span></a>
+                    <a class="pt-menu-item" href="{{ url_for('.request_password_reset') }}"><span>Forgot your password?</span></a>
+                </nav>
+                {% endif %}
+            </div>
         </div>
-        {% block body %}{% endblock %}
     </body>
 </html>

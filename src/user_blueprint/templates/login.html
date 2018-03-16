@@ -1,27 +1,35 @@
 {% extends "base.html" %}
 {% block body %}
-    <h1>Sign In</h1>
+    <h2>Sign In</h2>
 
     <form action="{{ url_for('.login') }}" method="post">
         {{ form.hidden_tag() }}
 
-        <span>Username or email address:</span>
-        <input type="text" name="username" value="{{ form.username.data if form.username.data else '' }}" required pattern=".{5,40}"/>
-        <br />
+        <label class="pt-label" style="width:100%;">
+            Username or email address:
+            <input type="text" name="username" required pattern=".{5,40}"
+                   class="pt-input pt-intent-primary" style="width:100%;"
+                   placeholder="Username or email"
+                   value="{{ form.username.data if form.username.data else '' }}"/>
+        </label>
 
-        <span>Password:</span>
-        <input type="password" name="password" required pattern=".{8,40}"/>
-        <br />
-
-        <span>Remember Me</span>
-        <input type="checkbox" value="{{ form.remember.data }}" name="remember" />
-        <br />
+        <label class="pt-label" style="width:100%;">
+            Password:
+            <input type="password" name="password" required pattern=".{8,40}"
+                   class="pt-input pt-intent-primary" style="width:100%;"
+                   placeholder="Password"/>
+        </label>
 
         {% if login_error %}
         <span style="color: red;">{{ login_error }}</span>
-        <br />
         {% endif %}
 
-        <input type="submit" value="Sign In" />
+        <label class="pt-control pt-switch">
+            Remember Me
+            <input type="checkbox" value="{{ form.remember.data }}" name="remember"/>
+            <span class="pt-control-indicator"></span>
+        </label>
+
+        <button type="submit" class="pt-button pt-intent-primary">Sign In</button>
     </form>
 {% endblock %}
