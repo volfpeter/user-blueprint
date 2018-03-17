@@ -8,13 +8,14 @@ with open(path.join(path.abspath(path.dirname(__file__)), 'README.md'), encoding
 
 setup(
     name="user-blueprint",
-    version="0.1.0",
+    version="0.1.1",
     description="Flask blueprint that provides all the user handling features that are required "
                 "by a web application in a database-independent way, including user registration, "
                 "login, session management, password reset functionality with JWTs, automatic "
                 "password hashing with Argon2 and of course the all the required route "
                 "implementations with the corresponding HTML templates (styled using BlueprintJS).",
     long_description=long_description,
+    long_description_content_type="text/markdown",
     url="https://github.com/volfpeter/user-blueprint",
     author="Peter Volf",
     author_email="do.volfp@gmail.com",
