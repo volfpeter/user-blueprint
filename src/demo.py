@@ -58,12 +58,13 @@ class User(UserMixin):
         self.first_name: str = None
         self.last_name: str = None
         self.password: str = None
+        self.verified: bool = False
 
     # Special methods
     # ------------------------------------------------------------
 
     def __str__(self) -> str:
-        return f"{self.first_name} {self.last_name} <{self.username} {self.email}, {self.password},{self.id}>"
+        return f"{self.first_name} {self.last_name} <{self.username} {self.email}, {self.password}, {self.id}, {self.verified}>"
 
     # Class methods
     # ------------------------------------------------------------
@@ -130,7 +131,7 @@ def get_user_by_id(user_id: str) -> Optional[User]:
 # ------------------------------------------------------------
 
 
-user_handler.reset_token_secret = "DemoResetTokenSecret"
+user_handler.token_signing_key = "DemoResetTokenSecret"
 
 
 @user_handler.user_by_reset_key_getter
@@ -210,6 +211,21 @@ def insert_user(data: RegistrationData) -> bool:
 
     return True
 
+
+@user_handler.verification_checker
+def is_user_verified(user: User) -> bool:
+    """
+    Returns whether the given user's registration is verified.
+
+    Arguments:
+        user (User): The user to check.
+
+    Returns:
+        Whether the given user's registration is verified.
+    """
+    return user.verified
+
+
 @user_handler.password_reset_email_sender
 def send_password_reset_email(user: User, reset_link: str) -> bool:
     """
@@ -230,6 +246,23 @@ def send_password_reset_email(user: User, reset_link: str) -> bool:
     return True
 
 
+@user_handler.verification_email_sender
+def send_verification_email(user: User, verification_link: str) -> None:
+    """
+    Sends the registration verification email with the given verification link
+    to the given user.
+
+    Arguments:
+        user (User): The user to send the verification email to.
+        verification_link (str): The user's verification link.
+    """
+    print(
+        "Verify your registration:"
+        f"  {user.username} ({user.email})"
+        f"  Click: {verification_link}"
+    )
+
+
 @user_handler.password_updater
 def update_user_password(user: User, password_hash: str) -> bool:
     """
@@ -244,6 +277,17 @@ def update_user_password(user: User, password_hash: str) -> bool:
     """
     user.password = password_hash
     return True
+
+
+@user_handler.registration_verifier
+def verify_registration(user: User) -> None:
+    """
+    Verifies the given user's registration.
+
+    Arguments:
+        user (User): The user whose registration is to be verified.
+    """
+    user.verified = True
 
 
 # View definitions
