@@ -1,0 +1,6 @@
+flask>=0.12
+flask-login>=0.4
+flask-wtf>=0.14
+passlib>=1.7
+pyjwt>=1.5
+argon2_cffi>=18.1
