@@ -1,12 +1,12 @@
 # Flask user handler blueprint
 
-Flask blueprint that provides all the user handling features that are required by a web application in a database-independent way, including:
+Lightweight Flask blueprint that provides all the user handling features that are required by a web application in a database-independent way, including:
 
 - User registration, login and session management.
 - Password reset functionality with JWTs.
 - Automatic, safe password handling using [Argon2](https://en.wikipedia.org/wiki/Argon2).
 
-The blueprint provides the following routes for a web application: `/login`, `/logout`, `/register`, `/request_password_reset`, `/reset/<token>` and `/verify/<token>`. All these routes interact with the user database through an instance of the `UserHandler` class that is a decorator-based database interface, similar to `Flask-Login`'s `LoginManager`. All the blueprint routes are backed by ready-to-use HTML templates that are formatted using [BlueprintJS](http://blueprintjs.com/docs/v2/).
+The blueprint provides the following routes for a web application: `/login`, `/logout`, `/register`, `/request_password_reset`, `/reset/<token>` and `/verify/<token>`. All these routes interact with the user database through an instance of the `UserHandler` class that is a decorator-based database interface, similar in style to `Flask-Login`'s `LoginManager`. All the blueprint routes are backed by ready-to-use HTML templates that are formatted using [BlueprintJS](http://blueprintjs.com/docs/v2/).
 
 ## Installation
 
