@@ -2,6 +2,7 @@
 Flask user handler blueprint.
 """
 
+
 # Imports
 # ----------------------------------------
 
@@ -158,6 +159,18 @@ def reset(token: str):
         token=token,
         form=form
     )
+
+
+@user_blueprint.route("/verify/<token>", methods=["GET"])
+def verify(token: str):
+    """
+    View function where a registration can be verified.
+    """
+    if current_user.is_authenticated:
+        return redirect(url_for("index"))
+
+    user_handler.verify_registration(token)
+    return redirect(url_for(".login"))
 
 
 # Methods

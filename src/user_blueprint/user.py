@@ -1,9 +1,11 @@
 """
-Form implementations for the user blueprint.
+The components of the user blueprint.
 """
+
 
 # Imports
 # ----------------------------------------
+
 
 from flask import url_for
 
@@ -43,8 +45,14 @@ class UserHandler(object):
     `password_getter`, `password_reset_email_sender`, `password_updater`, `reset_key_getter`,
     `user_getter`, `user_by_reset_key_getter`, `user_inserter`.
 
-    Besides the aforementioned decorators, you must set the `reset_token_secret`
-    property to the secret key you would like to sign reset tokens with.
+    Besides the aforementioned decorators, the `token_signing_key` property must be set
+    to the secret key you would like to sign tokens with.
+
+    Optionally the user handler can be configured to send a verification email to a user
+    after registration by using the following decorators on the methods that implement the
+    corresponding functionality: `verification_email_sender` and `registration_verifier`.
+    If only verified users should be allowed to log in, then the `verification_checker`
+    decorator must also be used.
 
     You can further configure the user handler by using the following decorators
     on the application methods that implement the corresponding functionality:
@@ -59,9 +67,9 @@ class UserHandler(object):
         Initialization.
         """
 
-        self.reset_token_secret: str = None
+        self.token_signing_key: str = None
         """
-        The secret key to use to sign password reset tokens.
+        The secret key to use to sign tokens.
         """
 
         self._password_getter: Callable[[UserMixin], str] = None
@@ -77,6 +85,11 @@ class UserHandler(object):
         self._password_updater: Callable[[UserMixin, str], bool] = None
         """
         Function that updates the given user's password (hash) to the given new value.
+        """
+
+        self._registration_verifier: Callable[[UserMixin], None] = None
+        """
+        Function that updates the given user's registration state to "verified".
         """
 
         self._reset_key_getter: Callable[[UserMixin], str] = None
@@ -96,7 +109,7 @@ class UserHandler(object):
 
         self._user_getter: Callable[[str], Optional[UserMixin]] = None
         """
-        Function that takes a user identifier (username or email address) and return
+        Function that takes a user identifier (username or email address) and returns
         the corresponding user.
         """
 
@@ -104,6 +117,16 @@ class UserHandler(object):
         """
         Function that inserts the user - defined by the given registration data - to
         the database.
+        """
+
+        self._verification_checker: Callable[[UserMixin], bool] = None
+        """
+        Function that returns whether the given user's registration is verified or not.
+        """
+
+        self._verification_email_sender: Callable[[UserMixin, str], None] = None
+        """
+        Function that sends the given verification link to the given user.
         """
 
     # Decorator Methods
@@ -131,6 +154,14 @@ class UserHandler(object):
         given user's password (hash) to the given new value.
         """
         self._password_updater = callback
+        return callback
+
+    def registration_verifier(self, callback: Callable[[UserMixin], None]) -> Callable[[UserMixin], None]:
+        """
+        Decorator to use on the application or database method that updates the
+        given user's registration state to "verified".
+        """
+        self._registration_verifier = callback
         return callback
 
     def reset_key_getter(self, callback: Callable[[UserMixin], str]) -> Callable[[UserMixin], str]:
@@ -171,10 +202,26 @@ class UserHandler(object):
 
     def user_inserter(self, callback: Callable[["RegistrationData"], bool]) -> Callable[["RegistrationData"], bool]:
         """
-        Decorator to use on the method that iinserts the user - defined by the
+        Decorator to use on the method that inserts the user - defined by the
         given registration data - to the database.
         """
         self._user_inserter = callback
+        return callback
+
+    def verification_checker(self, callback: Callable[[UserMixin], bool]) -> Callable[[UserMixin], bool]:
+        """
+        Decorator to use on the method that checks and returns whether the given
+        user's registration is verified or not.
+        """
+        self._verification_checker = callback
+        return callback
+
+    def verification_email_sender(self, callback: Callable[[UserMixin, str], None]) -> Callable[[UserMixin, str], None]:
+        """
+        Decorator to use on the application method that sends the given user the
+        given registration verification link.
+        """
+        self._verification_email_sender = callback
         return callback
 
     # Methods
@@ -208,7 +255,7 @@ class UserHandler(object):
         import jwt
 
         try:
-            data: Mapping = jwt.decode(token, self.reset_token_secret)
+            data: Mapping = jwt.decode(token, self.token_signing_key)
             if not self._reset_token_validator(data):
                 return None
         except:
@@ -226,7 +273,19 @@ class UserHandler(object):
         Returns:
             Whether the user has been successfully inserted to the database.
         """
-        return self._user_inserter(data)
+        if self._user_inserter(data):
+            if self._verification_email_sender is not None:
+                from time import time
+                import jwt
+                user: UserMixin = self.get_user(data.email)
+                token: bytes = jwt.encode(
+                    {"verification_key": self._reset_key_getter(user), "exp": time() + 6000},
+                    self.token_signing_key
+                )
+                self._verification_email_sender(user, url_for(".verify", token=token, _external=True))
+            return True
+
+        return False
 
     def login_user(self, data: "LoginData") -> bool:
         """
@@ -247,7 +306,8 @@ class UserHandler(object):
         from passlib.hash import argon2
 
         try:
-            if argon2.verify(data.password, self._password_getter(user)):
+            if argon2.verify(data.password, self._password_getter(user)) and\
+                (self._verification_checker is None or self._verification_checker(user)):
                 from flask_login import login_user
                 login_user(user, remember=data.remember)
                 return True
@@ -276,7 +336,7 @@ class UserHandler(object):
 
         token: bytes = jwt.encode(
             {"reset_key": self._reset_key_getter(user), "exp": time() + 600},
-            self.reset_token_secret
+            self.token_signing_key
         )
 
         return self._password_reset_email_sender(user, url_for(".reset", token=token, _external=True))
@@ -293,6 +353,24 @@ class UserHandler(object):
             `True` if the password has been updated successfully, `False` otherwise.
         """
         return self._password_updater(user, password_hash)
+
+    def verify_registration(self, token: str) -> None:
+        """
+        Verifies the registration corresponding to the given registration token.
+
+        Arguments:
+            token (str): The token corresponding to the registration to verify.
+        """
+        if self._registration_verifier is None:
+            return
+
+        import jwt
+        try:
+            data: Mapping = jwt.decode(token, self.token_signing_key)
+            user: UserMixin = self.get_user(data["verification_key"])
+            self._registration_verifier(user)
+        except:
+            pass
 
     # Protected methods
     # ------------------------------------------------------------
