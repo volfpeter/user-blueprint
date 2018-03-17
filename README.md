@@ -8,6 +8,10 @@ Flask blueprint that provides all the user handling features that are required b
 
 The blueprint provides the following routes for a web application: `/login`, `/logout`, `/register`, `/request_password_reset` and `/reset/<token>`. All these routes interact with the user database through an instance of the `UserHandler` class that is a decorator-based database interface, similar to `Flask-Login`'s `LoginManager`. All the blueprint routes are backed by ready-to-use HTML templates that are formatted using [BlueprintJS](http://blueprintjs.com/docs/v2/).
 
+## Installation
+
+The project is available on PyPI as [`user-blueprint`](https://pypi.org/project/user-blueprint/), you can install it with `pip install user-blueprint`.
+
 ## How to use
 
 The blueprint requires the following components to be configured:
