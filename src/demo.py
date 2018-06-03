@@ -9,10 +9,16 @@ Demo Flask application showing how to use the user blueprint.
 
 from flask import Flask, url_for
 
-from flask_login import LoginManager, UserMixin, current_user, login_required
+from flask_login import LoginManager,\
+                        UserMixin,\
+                        current_user,\
+                        login_required
 
-from user_blueprint.blueprint import user_blueprint, user_handler
-from user_blueprint.user import RegistrationData
+from user_blueprint.blueprint import user_blueprint,\
+                                     user_handler
+from user_blueprint.user import RegistrationData,\
+                                console_password_reset_email_sender,\
+                                console_verification_email_sender
 
 
 # Typing imports
@@ -132,6 +138,8 @@ def get_user_by_id(user_id: str) -> Optional[User]:
 
 
 user_handler.token_signing_key = "DemoResetTokenSecret"
+user_handler.password_reset_email_sender(console_password_reset_email_sender)
+user_handler.verification_email_sender(console_verification_email_sender)
 
 
 @user_handler.user_by_reset_key_getter
@@ -226,43 +234,6 @@ def is_user_verified(user: User) -> bool:
     return user.verified
 
 
-@user_handler.password_reset_email_sender
-def send_password_reset_email(user: User, reset_link: str) -> bool:
-    """
-    Sends the password reset email with the given reset link to the user.
-
-    Arguments:
-        user (User): The user to send the password reset email to.
-        reset_link (str): The user's password reset link.
-
-    Returns:
-        Whether the reset email has been sent successfully.
-    """
-    print(
-        "Password reset data:"
-        f"  {user.username} ({user.email})"
-        f"  Click: {reset_link}"
-    )
-    return True
-
-
-@user_handler.verification_email_sender
-def send_verification_email(user: User, verification_link: str) -> None:
-    """
-    Sends the registration verification email with the given verification link
-    to the given user.
-
-    Arguments:
-        user (User): The user to send the verification email to.
-        verification_link (str): The user's verification link.
-    """
-    print(
-        "Verify your registration:"
-        f"  {user.username} ({user.email})"
-        f"  Click: {verification_link}"
-    )
-
-
 @user_handler.password_updater
 def update_user_password(user: User, password_hash: str) -> bool:
     """
@@ -270,7 +241,7 @@ def update_user_password(user: User, password_hash: str) -> bool:
 
     Arguments:
         user (User): The user whose password is to be updated.
-        password (str): The new password hash of the user.
+        password_hash (str): The new password hash of the user.
 
     Returns:
         Whether the user's password has been updated successfully.

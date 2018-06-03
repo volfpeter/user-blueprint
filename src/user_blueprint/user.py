@@ -23,7 +23,7 @@ from wtforms.validators import DataRequired, Email, EqualTo, Length, ValidationE
 # ----------------------------------------
 
 
-from typing import Callable, Mapping, Optional, NamedTuple
+from typing import Any, Callable, Mapping, Optional, NamedTuple
 
 
 # Metadata
@@ -581,3 +581,45 @@ class RequestPasswordResetForm(FlaskForm):
     """
 
     email = StringField("Email", validators=[DataRequired(), Email()])
+
+
+# Methods
+# ------------------------------------------------------------
+
+
+def console_verification_email_sender(user: Any, verification_link: str) -> None:
+    """
+    Registration verification email sender method that prints a message to the console.
+
+    Arguments:
+        user (Any): The user to send the verification email to. The user is assumed to have a
+                    `username` and an `email` property.
+        verification_link (str): The user's verification link.
+    """
+    print(
+        f"Email sent to {user.username}"
+        f"  Dear {user.username}\n"
+        f"  Please verify your email address and complete your registration "
+        f"by opening this link: {verification_link}.\n  Thank you!"
+    )
+
+
+def console_password_reset_email_sender(user: Any, reset_link: str) -> bool:
+    """
+    Sends the password reset email with the given reset link to the user.
+
+    Arguments:
+        user (Any): The user to send tha password reset email to. The user is assumed to have
+                    a `username` and an `email` property.
+        reset_link (str): The user's password reset link.
+
+    Returns:
+        Whether the reset email has been sent successfully.
+    """
+    print(
+        f"Email sent to {user.username}"
+        f"  Dear {user.username}\n"
+        f"  You have requested a password reset. Please open this link to change your password: "
+        f"{reset_link}\n  Thank you!"
+    )
+    return True
