@@ -1,3 +1,5 @@
+[![Downloads](https://pepy.tech/badge/user-blueprint)](https://pepy.tech/project/user-blueprint)
+
 # Flask user handler blueprint
 
 Lightweight Flask blueprint that provides all the user handling features that are required by a web application in a database-independent way, including:
